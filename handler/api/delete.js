@@ -13,14 +13,6 @@ module.exports.deleteApi = (event, context, callback) => {
   let restApi = new RestApi();
   let s3Obj = new S3();
 
-  /**
-   * 1. passed in the apiExecId
-   * 2. use it to get apikeyid from the apitable
-   * 3. construct a path for s3
-   * 4. delete rest api using apiExecId
-   * 5. delete entry in apitable using apikeyid and apiexecid
-   * 6. delete schema from s3 using the path in step 3
-   */
   let ctx = {};
   ctx.apiExecId = event.pathParameters.id;
   ctx.apiKeyValue = event.headers["x-api-key"];
@@ -42,15 +34,23 @@ module.exports.deleteApi = (event, context, callback) => {
     .then(ctx => { return apiTable.getApis(ctx); })
     .then(ctx => {
       return new Promise((resolve, reject) => {
+        let authorized = false;
+
         ctx.apiExecIds.forEach(apiExecId => {
           if (ctx.apiExecId == apiExecId) {
             // Authorized to deleteApi - set s3key
             ctx.s3Key = ctx.apiKeyId + "/" + ctx.apiExecId + "/schema";
-            resolve(ctx);
-          } else {
-            reject(new Error("Unauthorised to delete api with id: ", ctx.apiExecId))
+            authorized = true;
           }
         });
+
+        if (authorized) {
+          resolve(ctx);
+        } else {
+          let msg = "Unauthorised to delete api with id: " + ctx.apiExecId;
+          console.error(msg);
+          reject(new Error(msg));
+        }
       });
     })
     .then(ctx => { return restApi.deleteApi(ctx); })
