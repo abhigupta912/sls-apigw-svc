@@ -1,0 +1,7 @@
+{
+  "name": "apigwsvc",
+  "author": "Abhishek Gupta",
+  "dependencies": {
+    "aws-sdk": "^2.147.0"
+  }
+}

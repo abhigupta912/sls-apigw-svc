@@ -1,0 +1,318 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: apigwsvc
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+# frameworkVersion: "=X.X.X"
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  stage: dev
+  region: us-east-1
+  apiKeys:
+    - dummy
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "apigateway:*"
+      Resource: "arn:aws:apigateway:${self:provider.region}::/*"
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:*"
+      Resource: "arn:aws:dynamodb:${self:provider.region}:*:*"
+    - Effect: "Allow"
+      Action:
+        - "s3:*"
+      Resource: "arn:aws:s3:::apigwsvc/*"
+
+# you can define service wide environment variables here
+#  environment:
+#    variable1: value1
+
+# you can add packaging information here
+#package:
+#  include:
+#    - include-me.js
+#    - include-me-dir/**
+#  exclude:
+#    - exclude-me.js
+#    - exclude-me-dir/**
+
+functions:
+  registerOrg:
+    handler: handler/org.register
+    events:
+      - http:
+          path: org/{orgName}
+          method: post
+          cors: true
+  getApis:
+    handler: handler/api/get.getApis
+    events:
+      - http:
+          path: api
+          method: get
+          cors: true
+  getApi:
+    handler: handler/api/get.getApi
+    events:
+      - http:
+          path: api/{id}
+          method: get
+          cors: true
+  getSchema:
+    handler: handler/api/get.getSchema
+    events:
+      - http:
+          path: api/{id}/schema
+          method: get
+          cors: true
+  importApi:
+    handler: handler/api/import.importApi
+    events:
+      - http:
+          path: api
+          method: post
+          cors: true
+          private: true
+  deleteApi:
+    handler: handler/api/delete.deleteApi
+    events:
+      - http:
+          path: api/{id}
+          method: delete
+          cors: true
+          private: true
+  test-apikey-getKeys:
+    handler: test/apikey.getKeys
+    events:
+      - http:
+          path: apikey
+          method: get
+  test-apikey-create:
+    handler: test/apikey.create
+    events:
+      - http:
+          path: apikey/{id}
+          method: post
+  test-apikey-delete:
+    handler: test/apikey.delete
+    events:
+      - http:
+          path: apikey/{id}
+          method: delete
+  test-restapi-getApis:
+    handler: test/restapi.getApis
+    events:
+      - http:
+          path: restapi
+          method: get
+  test-restapi-importApi:
+    handler: test/restapi.importApi
+    events:
+      - http:
+          path: restapi
+          method: post
+  test-restapi-deleteApi:
+    handler: test/restapi.deleteApi
+    events:
+      - http:
+          path: restapi/{id}
+          method: delete
+  test-usageplan-getPlans:
+    handler: test/usageplan.getPlans
+    events:
+      - http:
+          path: usageplan
+          method: get
+  test-usageplan-addKey:
+    handler: test/usageplan.addKey
+    events:
+      - http:
+          path: usageplan/{planName}/{keyId}
+          method: post
+  test-usageplan-removeKey:
+    handler: test/usageplan.removeKey
+    events:
+      - http:
+          path: usageplan/{planName}/{keyId}
+          method: delete
+  test-s3-get:
+    handler: test/s3.get
+    events:
+      - http:
+          path: s3/{key}
+          method: get
+  test-s3-put:
+    handler: test/s3.put
+    events:
+      - http:
+          path: s3/{key}
+          method: post
+  test-s3-delete:
+    handler: test/s3.delete
+    events:
+      - http:
+          path: s3/{key}
+          method: delete
+  test-orgtable-getOrgs:
+    handler: test/orgtable.getOrgs
+    events:
+      - http:
+          path: orgtable
+          method: get
+  test-orgtable-getOrg:
+    handler: test/orgtable.getOrg
+    events:
+      - http:
+          path: orgtable/{id}
+          method: get
+  test-orgtable-putOrg:
+    handler: test/orgtable.putOrg
+    events:
+      - http:
+          path: orgtable/{id}
+          method: post
+  test-orgtable-deleteOrg:
+    handler: test/orgtable.deleteOrg
+    events:
+      - http:
+          path: orgtable/{id}
+          method: delete
+  test-apitable-getAllApis:
+    handler: test/apitable.getAllApis
+    events:
+      - http:
+          path: apitable
+          method: get
+  test-apitable-getApis:
+    handler: test/apitable.getApis
+    events:
+      - http:
+          path: apitable/{apiKeyId}
+          method: get
+  test-apitable-putApi:
+    handler: test/apitable.putApi
+    events:
+      - http:
+          path: apitable/{apiKeyId}/{restApiId}
+          method: post
+  test-apitable-deleteApi:
+    handler: test/apitable.deleteApi
+    events:
+      - http:
+          path: apitable/{apiKeyId}/{restApiId}
+          method: delete
+  test-apitable-deleteApis:
+    handler: test/apitable.deleteApis
+    events:
+      - http:
+          path: apitable/{apiKeyId}
+          method: delete
+
+#    Define function environment variables here
+#    environment:
+#      variable2: value2
+
+resources:
+  Resources:
+    OrgTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: ApiKey
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: ApiKey
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+        TableName: '${self:service}-org'
+    ApiTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: ApiKey
+            AttributeType: S
+          -
+            AttributeName: ApiId
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: ApiKey
+            KeyType: HASH
+          -
+            AttributeName: ApiId
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 15
+          WriteCapacityUnits: 15
+        TableName: '${self:service}-api'
+    SchemaBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: apigwsvc
+        # AccessControl: PublicRead
+        # CorsConfiguration:
+        #   CorsRules:
+        #     - AllowedMethods:
+        #       - GET
+        #       - PUT
+        #       - POST
+        #       - HEAD
+        #   AllowedOrigins:
+        #     - "*"
+        #   AllowedHeaders:
+        #     - "*"
+    UsagePlanLow:
+      Type: AWS::ApiGateway::UsagePlan
+      DependsOn: "ApiGatewayApiKey1"
+      Properties:
+        ApiStages:
+        - ApiId:
+            Ref: "ApiGatewayRestApi"
+          Stage: ${self:provider.stage}
+        Quota:
+          Limit: 10000
+          Period: MONTH
+        Throttle:
+          RateLimit: 500
+          BurstLimit: 100
+        UsagePlanName: LowUse
+    UsagePlanHigh:
+      Type: AWS::ApiGateway::UsagePlan
+      DependsOn: "ApiGatewayApiKey1"
+      Properties:
+        ApiStages:
+        - ApiId:
+            Ref: "ApiGatewayRestApi"
+          Stage: ${self:provider.stage}
+        Quota:
+          Limit: 20000
+          Period: MONTH
+        Throttle:
+          RateLimit: 1000
+          BurstLimit: 200
+        UsagePlanName: HighUse
+
+#  Outputs:
+#     NewOutput:
+#       Description: "Description for the output"
+#       Value: "Some output value"
